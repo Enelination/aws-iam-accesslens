@@ -103,15 +103,6 @@ export default function App() {
               gap: 16,
             }}
           >
-            <span>client-side only</span>
-            <span
-              style={{
-                width: 1,
-                height: 14,
-                background: C.border,
-                display: "inline-block",
-              }}
-            />
             <span>
               Built by{" "}
               <a

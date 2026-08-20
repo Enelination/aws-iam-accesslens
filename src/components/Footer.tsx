@@ -20,15 +20,6 @@ export function Footer() {
         style={{
           fontFamily: sans,
           fontSize: 12,
-          color: C.faint,
-        }}
-      >
-        No data leaves the browser. All analysis runs locally.
-      </span>
-      <span
-        style={{
-          fontFamily: sans,
-          fontSize: 12,
           color: C.muted,
           display: "flex",
           alignItems: "center",
