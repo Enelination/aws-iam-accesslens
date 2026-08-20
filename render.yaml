@@ -1,0 +1,5 @@
+services:
+  - type: static_site
+    name: aws-iam-accesslens
+    buildCommand: npm run build
+    staticPublishPath: dist
