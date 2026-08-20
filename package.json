@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "iam-accesslens": "./cli/iam-accesslens.cjs"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

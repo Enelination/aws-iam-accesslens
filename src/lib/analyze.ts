@@ -18,6 +18,15 @@ export interface AnalyzedStatement {
   summary: string;
 }
 
+export interface PolicyReport {
+  statements: AnalyzedStatement[];
+  score: number;
+  grade: "A" | "B" | "C" | "D" | "F";
+  totalDanger: number;
+  totalWarn: number;
+  totalSafe: number;
+}
+
 // Actions that are high-value escalation paths or data-exfil primitives.
 // Grouped by category for clearer messages.
 const ESCALATION_ACTIONS: Record<string, string> = {
@@ -722,13 +731,86 @@ export function analyzeStatement(
   };
 }
 
-export function analyzePolicy(policyJson: unknown): AnalyzedStatement[] {
-  if (!policyJson || typeof policyJson !== "object") return [];
+function computeScore(statements: AnalyzedStatement[]): {
+  score: number;
+  grade: "A" | "B" | "C" | "D" | "F";
+} {
+  if (statements.length === 0) return { score: 100, grade: "A" };
+
+  let deductions = 0;
+
+  for (const s of statements) {
+    const dangerCount = s.findings.filter((f) => f.level === "danger").length;
+    const warnCount = s.findings.filter((f) => f.level === "warn").length;
+
+    // Each danger finding deducts heavily
+    deductions += dangerCount * 20;
+    // Each warn deducts moderately
+    deductions += warnCount * 6;
+
+    // Extra penalty for wildcard action + wildcard resource (full admin)
+    const hasFullAdmin = s.actions.includes("*") && s.resources.includes("*");
+    if (hasFullAdmin) deductions += 40;
+
+    // Extra penalty for sensitive actions without conditions
+    const sensitiveNoCondition =
+      s.findings.some(
+        (f) =>
+          f.level === "danger" &&
+          (f.msg.includes("PassRole") ||
+            f.msg.includes("CreateAccessKey") ||
+            f.msg.includes("CreateLoginProfile"))
+      ) && !s.hasCondition;
+    if (sensitiveNoCondition) deductions += 15;
+  }
+
+  // Bonus for conditions present
+  const withCondition = statements.filter((s) => s.hasCondition).length;
+  const conditionBonus = Math.floor(
+    (withCondition / statements.length) * 8
+  );
+
+  const score = Math.max(0, Math.min(100, 100 - deductions + conditionBonus));
+
+  let grade: "A" | "B" | "C" | "D" | "F";
+  if (score >= 90) grade = "A";
+  else if (score >= 75) grade = "B";
+  else if (score >= 55) grade = "C";
+  else if (score >= 35) grade = "D";
+  else grade = "F";
+
+  return { score, grade };
+}
+
+export function analyzePolicy(policyJson: unknown): PolicyReport {
+  if (!policyJson || typeof policyJson !== "object")
+    return {
+      statements: [],
+      score: 100,
+      grade: "A",
+      totalDanger: 0,
+      totalWarn: 0,
+      totalSafe: 0,
+    };
   const raw = (policyJson as { Statement?: unknown }).Statement;
   const arr: RawStatement[] = Array.isArray(raw)
     ? (raw as RawStatement[])
     : raw
     ? [raw as RawStatement]
     : [];
-  return arr.map((s, i) => analyzeStatement(s, i));
+  const statements = arr.map((s, i) => analyzeStatement(s, i));
+  const { score, grade } = computeScore(statements);
+
+  let totalDanger = 0;
+  let totalWarn = 0;
+  let totalSafe = 0;
+  for (const s of statements) {
+    for (const f of s.findings) {
+      if (f.level === "danger") totalDanger++;
+      else if (f.level === "warn") totalWarn++;
+      else totalSafe++;
+    }
+  }
+
+  return { statements, score, grade, totalDanger, totalWarn, totalSafe };
 }

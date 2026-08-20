@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { analyzePolicy } from "./lib/analyze";
+import { analyzePolicy, PolicyReport } from "./lib/analyze";
 import { SAMPLES } from "./lib/samples";
-import { C, mono, sans } from "./lib/theme";
+import { C, mono, sans, levelColor } from "./lib/theme";
 import { StatementCard } from "./components/StatementCard";
 import { Footer } from "./components/Footer";
 import { RiskBar } from "./components/Primitives";
+import { exportReport } from "./lib/export";
 
 const DEFAULT_POLICY = SAMPLES["Overly broad admin"];
 
@@ -24,17 +25,23 @@ export default function App() {
     }
   }, [raw]);
 
-  const statements = useMemo(() => (parsed ? analyzePolicy(parsed) : []), [
-    parsed,
-  ]);
+  const report = useMemo<PolicyReport>(
+    () =>
+      parsed
+        ? analyzePolicy(parsed)
+        : {
+            statements: [],
+            score: 100,
+            grade: "A",
+            totalDanger: 0,
+            totalWarn: 0,
+            totalSafe: 0,
+          },
+    [parsed]
+  );
 
-  const summary = useMemo(() => {
-    const counts = { danger: 0, warn: 0, safe: 0 };
-    statements.forEach((s) => s.findings.forEach((f) => counts[f.level]++));
-    return counts;
-  }, [statements]);
-
-  const totalFindings = summary.danger + summary.warn + summary.safe;
+  const totalFindings =
+    report.totalDanger + report.totalWarn + report.totalSafe;
 
   return (
     <div
@@ -78,7 +85,16 @@ export default function App() {
                 justifyContent: "center",
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
@@ -109,7 +125,11 @@ export default function App() {
                 href="https://github.com/Enelination"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}
+                style={{
+                  color: C.accent,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
               >
                 Enelination
               </a>
@@ -157,33 +177,53 @@ export default function App() {
             >
               policy.json
             </span>
-            <select
-              value={selectedSample}
-              onChange={(e) => {
-                const key = e.target.value;
-                setSelectedSample(key);
-                const sample = SAMPLES[key];
-                if (sample) setRaw(JSON.stringify(sample, null, 2));
-              }}
-              style={{
-                background: C.surface,
-                color: C.text,
-                border: `1px solid ${C.border}`,
-                borderRadius: 6,
-                fontFamily: mono,
-                fontSize: 11,
-                padding: "5px 10px",
-                cursor: "pointer",
-                outline: "none",
-              }}
-            >
-              <option value="">Load sample policy…</option>
-              {Object.keys(SAMPLES).map((k) => (
-                <option key={k} value={k}>
-                  {k}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: "flex", gap: 8 }}>
+              <select
+                value={selectedSample}
+                onChange={(e) => {
+                  const key = e.target.value;
+                  setSelectedSample(key);
+                  const sample = SAMPLES[key];
+                  if (sample) setRaw(JSON.stringify(sample, null, 2));
+                }}
+                style={{
+                  background: C.surface,
+                  color: C.text,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 6,
+                  fontFamily: mono,
+                  fontSize: 11,
+                  padding: "5px 10px",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                <option value="">Load sample policy…</option>
+                {Object.keys(SAMPLES).map((k) => (
+                  <option key={k} value={k}>
+                    {k}
+                  </option>
+                ))}
+              </select>
+              {!error && report.statements.length > 0 && (
+                <button
+                  onClick={() => exportReport(report, raw)}
+                  style={{
+                    background: C.accentDim,
+                    color: C.accent,
+                    border: `1px solid ${C.accent}44`,
+                    borderRadius: 6,
+                    fontFamily: mono,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: "5px 12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Export Report
+                </button>
+              )}
+            </div>
           </div>
 
           <textarea
@@ -227,8 +267,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Risk summary bar */}
-        {!error && statements.length > 0 && (
+        {/* Score + Risk summary */}
+        {!error && report.statements.length > 0 && (
           <div
             style={{
               background: C.surface,
@@ -241,7 +281,27 @@ export default function App() {
               alignItems: "center",
             }}
           >
-            <div style={{ flex: "0 0 auto", paddingRight: 20, borderRight: `1px solid ${C.border}` }}>
+            {/* Score gauge */}
+            <div
+              style={{
+                flex: "0 0 auto",
+                paddingRight: 24,
+                borderRight: `1px solid ${C.border}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+              }}
+            >
+              <ScoreGauge score={report.score} grade={report.grade} />
+            </div>
+
+            <div
+              style={{
+                flex: "0 0 auto",
+                paddingRight: 20,
+                borderRight: `1px solid ${C.border}`,
+              }}
+            >
               <div
                 style={{
                   fontFamily: mono,
@@ -255,19 +315,41 @@ export default function App() {
               >
                 Findings
               </div>
-              <div style={{ fontFamily: mono, fontSize: 28, fontWeight: 700, color: C.text }}>
+              <div
+                style={{
+                  fontFamily: mono,
+                  fontSize: 28,
+                  fontWeight: 700,
+                  color: C.text,
+                }}
+              >
                 {totalFindings}
               </div>
             </div>
-            <RiskBar level="danger" label="Critical" count={summary.danger} total={totalFindings} />
-            <RiskBar level="warn" label="Warning" count={summary.warn} total={totalFindings} />
-            <RiskBar level="safe" label="Passed" count={summary.safe} total={totalFindings} />
+            <RiskBar
+              level="danger"
+              label="Critical"
+              count={report.totalDanger}
+              total={totalFindings}
+            />
+            <RiskBar
+              level="warn"
+              label="Warning"
+              count={report.totalWarn}
+              total={totalFindings}
+            />
+            <RiskBar
+              level="safe"
+              label="Passed"
+              count={report.totalSafe}
+              total={totalFindings}
+            />
           </div>
         )}
 
         {/* Statements */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {statements.length === 0 && !error && (
+          {report.statements.length === 0 && !error && (
             <div
               style={{
                 border: `1px dashed ${C.border}`,
@@ -282,14 +364,100 @@ export default function App() {
               Paste a policy above to see the analysis
             </div>
           )}
-          {statements.map((s) => (
+          {report.statements.map((s) => (
             <StatementCard key={s.idx} s={s} />
           ))}
         </div>
       </main>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+      <div
+        style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}
+      >
         <Footer />
+      </div>
+    </div>
+  );
+}
+
+function ScoreGauge({
+  score,
+  grade,
+}: {
+  score: number;
+  grade: string;
+}) {
+  const color =
+    score >= 80
+      ? C.safe
+      : score >= 55
+      ? C.warn
+      : C.danger;
+  const circumference = 2 * Math.PI * 38;
+  const offset = circumference - (score / 100) * circumference;
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: 96,
+        height: 96,
+      }}
+    >
+      <svg width="96" height="96" viewBox="0 0 96 96">
+        <circle
+          cx="48"
+          cy="48"
+          r="38"
+          fill="none"
+          stroke={C.border}
+          strokeWidth="6"
+        />
+        <circle
+          cx="48"
+          cy="48"
+          r="38"
+          fill="none"
+          stroke={color}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform="rotate(-90 48 48)"
+          style={{ transition: "stroke-dashoffset 0.5s ease" }}
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: mono,
+            fontSize: 22,
+            fontWeight: 700,
+            color,
+            lineHeight: 1,
+          }}
+        >
+          {score}
+        </span>
+        <span
+          style={{
+            fontFamily: mono,
+            fontSize: 10,
+            fontWeight: 600,
+            color: C.faint,
+            marginTop: 2,
+          }}
+        >
+          {grade}
+        </span>
       </div>
     </div>
   );
