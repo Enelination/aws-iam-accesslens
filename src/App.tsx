@@ -4,6 +4,7 @@ import { SAMPLES } from "./lib/samples";
 import { C, mono, sans, levelColor } from "./lib/theme";
 import { StatementCard } from "./components/StatementCard";
 import { Footer } from "./components/Footer";
+import { Docs } from "./components/Docs";
 import { RiskBar } from "./components/Primitives";
 import { exportReport } from "./lib/export";
 
@@ -369,6 +370,12 @@ export default function App() {
           ))}
         </div>
       </main>
+
+      <div
+        style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 40px" }}
+      >
+        <Docs />
+      </div>
 
       <div
         style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}
