@@ -16,8 +16,27 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  let filePath = path.join(DIST, req.url === "/" ? "index.html" : req.url);
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const decoded = decodeURIComponent(url.pathname);
+
+  // Block path traversal — reject any path with .. segments
+  if (decoded.includes("..")) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
+
+  let filePath = path.join(DIST, decoded === "/" ? "index.html" : decoded);
+
+  // Prevent path traversal — ensure resolved path stays inside DIST
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(DIST)) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
+
+  if (!fs.existsSync(resolved) || fs.statSync(resolved).isDirectory()) {
     filePath = path.join(DIST, "index.html");
   }
   const ext = path.extname(filePath);
