@@ -1,6 +1,6 @@
 {
   "name": "aws-iam-accesslens",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CLI tool to analyze AWS IAM policies for security risks, wildcards, privilege escalation, and AWS best practice violations",
   "keywords": ["aws", "iam", "security", "policy", "linter", "audit", "cli"],
   "author": "Enelination",
@@ -13,6 +13,7 @@
     "iam-accesslens": "./iam-accesslens.cjs"
   },
   "files": [
-    "iam-accesslens.cjs"
+    "iam-accesslens.cjs",
+    "README.md"
   ]
 }
