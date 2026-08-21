@@ -6,7 +6,7 @@ import { StatementCard } from "./components/StatementCard";
 import { Footer } from "./components/Footer";
 import { Docs } from "./components/Docs";
 import { RiskBar } from "./components/Primitives";
-import { exportReport } from "./lib/export";
+import { exportMarkdown, exportPDF } from "./lib/export";
 
 const DEFAULT_POLICY = SAMPLES["Overly broad admin"];
 
@@ -210,22 +210,40 @@ export default function App() {
                 ))}
               </select>
               {!error && report.statements.length > 0 && (
-                <button
-                  onClick={() => exportReport(report, raw)}
-                  style={{
-                    background: C.accentDim,
-                    color: C.accent,
-                    border: `1px solid ${C.accent}44`,
-                    borderRadius: 6,
-                    fontFamily: mono,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    padding: "5px 12px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Export Report
-                </button>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    onClick={() => exportMarkdown(report, raw)}
+                    style={{
+                      background: C.accentDim,
+                      color: C.accent,
+                      border: `1px solid ${C.accent}44`,
+                      borderRadius: 6,
+                      fontFamily: mono,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "5px 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Export MD
+                  </button>
+                  <button
+                    onClick={() => exportPDF(report, raw)}
+                    style={{
+                      background: C.accentDim,
+                      color: C.accent,
+                      border: `1px solid ${C.accent}44`,
+                      borderRadius: 6,
+                      fontFamily: mono,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "5px 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Export PDF
+                  </button>
+                </div>
               )}
             </div>
           </div>
