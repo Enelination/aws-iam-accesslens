@@ -210,40 +210,7 @@ export default function App() {
                 ))}
               </select>
               {!error && report.statements.length > 0 && (
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button
-                    onClick={() => exportMarkdown(report, raw)}
-                    style={{
-                      background: C.accentDim,
-                      color: C.accent,
-                      border: `1px solid ${C.accent}44`,
-                      borderRadius: 6,
-                      fontFamily: mono,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: "5px 12px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Export MD
-                  </button>
-                  <button
-                    onClick={() => exportPDF(report, raw)}
-                    style={{
-                      background: C.accentDim,
-                      color: C.accent,
-                      border: `1px solid ${C.accent}44`,
-                      borderRadius: 6,
-                      fontFamily: mono,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: "5px 12px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Export PDF
-                  </button>
-                </div>
+                <ExportDropdown report={report} raw={raw} />
               )}
             </div>
           </div>
@@ -481,6 +448,112 @@ function ScoreGauge({
           {grade}
         </span>
       </div>
+    </div>
+  );
+}
+
+function ExportDropdown({
+  report,
+  raw,
+}: {
+  report: PolicyReport;
+  raw: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          background: C.accentDim,
+          color: C.accent,
+          border: `1px solid ${C.accent}44`,
+          borderRadius: 6,
+          fontFamily: mono,
+          fontSize: 11,
+          fontWeight: 600,
+          padding: "5px 12px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        Export
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <>
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 99 }}
+            onClick={() => setOpen(false)}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              right: 0,
+              marginTop: 4,
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              overflow: "hidden",
+              zIndex: 100,
+              minWidth: 140,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+            }}
+          >
+            <button
+              onClick={() => {
+                exportMarkdown(report, raw);
+                setOpen(false);
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                background: "transparent",
+                color: C.text,
+                border: "none",
+                fontFamily: mono,
+                fontSize: 11,
+                padding: "8px 14px",
+                textAlign: "left",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = C.bg)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              Markdown (.md)
+            </button>
+            <button
+              onClick={() => {
+                exportPDF(report, raw);
+                setOpen(false);
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                background: "transparent",
+                color: C.text,
+                border: "none",
+                borderTop: `1px solid ${C.border}`,
+                fontFamily: mono,
+                fontSize: 11,
+                padding: "8px 14px",
+                textAlign: "left",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = C.bg)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              PDF (.pdf)
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
