@@ -61,6 +61,27 @@ docker run --rm -v $(pwd):/policies enel1/aws-iam-accesslens /policies/policy.js
 cat policy.json | docker run --rm -i enel1/aws-iam-accesslens --json
 ```
 
+### MCP Server
+
+Let AI agents (Claude Desktop, Cursor, ChatGPT) analyze IAM policies directly from chat:
+
+```json
+{
+  "mcpServers": {
+    "iam-accesslens": {
+      "command": "npx",
+      "args": ["aws-iam-accesslens-mcp"]
+    }
+  }
+}
+```
+
+**Tools available:**
+- `analyze_policy` — analyze a full IAM policy document for security risks
+- `analyze_statement` — analyze a single IAM statement
+
+**Claude Desktop config path:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+
 ## How the score works
 
 Base score is **100**. Deductions are applied per statement, then a condition bonus is added.

@@ -1,0 +1,33 @@
+{
+  "name": "aws-iam-accesslens-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for analyzing AWS IAM policies for security risks, wildcards, privilege escalation, and best practice violations",
+  "keywords": ["mcp", "aws", "iam", "security", "policy", "linter", "ai", "claude"],
+  "author": "Enelination",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Enelination/aws-iam-accesslens"
+  },
+  "type": "module",
+  "bin": {
+    "aws-iam-accesslens-mcp": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node build/index.js",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
