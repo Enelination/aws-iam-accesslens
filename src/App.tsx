@@ -107,7 +107,7 @@ export default function App() {
                 letterSpacing: -0.5,
               }}
             >
-              IAM Visualizer
+              IAM AccessLens
             </span>
           </div>
           <div
