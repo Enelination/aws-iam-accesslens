@@ -48,6 +48,19 @@ jobs:
 
 This runs on every PR, posts findings as a comment, and optionally fails if HIGH RISK issues are found.
 
+### Docker
+
+```sh
+# Analyze a local policy file
+docker run --rm -v $(pwd):/policies enel1/aws-iam-accesslens /policies/policy.json
+
+# JSON output
+docker run --rm -v $(pwd):/policies enel1/aws-iam-accesslens /policies/policy.json --json
+
+# Pipe from stdin
+cat policy.json | docker run --rm -i enel1/aws-iam-accesslens --json
+```
+
 ## How the score works
 
 Base score is **100**. Deductions are applied per statement, then a condition bonus is added.
