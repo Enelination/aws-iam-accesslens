@@ -48,6 +48,33 @@ jobs:
 
 This runs on every PR, posts findings as a comment, and optionally fails if HIGH RISK issues are found.
 
+## How the score works
+
+Base score is **100**. Deductions are applied per statement, then a condition bonus is added.
+
+| Finding | Deduction |
+|---|---|
+| 🔴 Critical finding | −20 |
+| 🟡 Warning finding | −6 |
+| Full admin (`Action:* + Resource:*`) | −40 |
+| Sensitive actions without condition | −15 |
+
+| Bonus | Gain |
+|---|---|
+| Condition block present | +8 (scaled by % of statements with conditions) |
+
+Minimum 0, maximum 100.
+
+### Grades
+
+| Grade | Score |
+|---|---|
+| A | 90–100 — follows least-privilege |
+| B | 75–89 — some issues, low risk |
+| C | 55–74 — several risky patterns |
+| D | 35–54 — significant security concerns |
+| F | 0–34 — full admin or multiple criticals |
+
 ## What it flags
 
 | Finding | Severity |
