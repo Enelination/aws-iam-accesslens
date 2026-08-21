@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "publish:cli": "cd cli && npm publish"
   },
   "dependencies": {
     "@types/react": "^18.3.3",
