@@ -146,6 +146,9 @@ export default function App() {
           padding: "28px 24px 60px",
         }}
       >
+        {/* Docs */}
+        <Docs />
+
         {/* Editor */}
         <div
           style={{
@@ -370,12 +373,6 @@ export default function App() {
           ))}
         </div>
       </main>
-
-      <div
-        style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 40px" }}
-      >
-        <Docs />
-      </div>
 
       <div
         style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}
